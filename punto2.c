@@ -8,8 +8,20 @@
 
 int status;
 
-// declaracin del handler para las señales SIGINT y SIGUSR1
+// funcion calcular numero pseudo-aleatorio
+/*
+int calc(void){
+    int num;
+    srand(getpid());
+    num = (rand() % 256);
+    return num;
+}
+*/
+
+
+// declaracion del handler para las señales SIGINT y SIGUSR1
 void handler1(int s){
+    // exit(calc());
     exit(status);
 }
 
@@ -36,23 +48,27 @@ int main(int argc,char *argv[]){
     // ciclo for de creacion de hermanos.
     for(int i=0 ; i<n && pid>0 ; i++){
         pid = fork();
-        if(pid<0){
-            perror("fork");
-            exit(1);
+        if(pid>0){
+            pids[i]=pid;
         }
-        if(pid==0){
-            status = i+1;
+        else if(pid==0){
+            status=i+1;
+            printf("hijo1 pid: %d \n",getpid());
             signal(SIGUSR1,handler1);
             signal(SIGINT,handler1);
             pause();
+        }
+        else{
+            perror("fork");
+            exit(1);
         }
     }
 
     // codigo de espera del padre.
     for(int i=0; i<n ; i++){
-        wait(0);
+        wait(&status);
         retornos[i] = WEXITSTATUS(status);
-        printf("valor del hijo %i: %i\n",pids[i],retornos[i]);
+        printf("valor del hijo %i: %i\n",pids[i],WEXITSTATUS(status));
     }
 
     // codigo de la sumatoria.
