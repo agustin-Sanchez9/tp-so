@@ -53,7 +53,7 @@ int main(int argc,char *argv[]){
         }
         else if(pid==0){
             status=i+1;
-            printf("hijo1 pid: %d \n",getpid());
+            printf("hijo pid: %d \n",getpid());
             signal(SIGUSR1,handler1);
             signal(SIGINT,handler1);
             pause();
