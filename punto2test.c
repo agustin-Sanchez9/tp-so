@@ -5,12 +5,9 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-
-int status;
-
 // declaracin del handler para las señales SIGINT y SIGUSR1
 void handler1(int s){
-    exit(status);
+    exit(0);
 }
 
 int main(int argc,char *argv[]){
@@ -41,17 +38,22 @@ int main(int argc,char *argv[]){
             exit(1);
         }
         if(pid==0){
-            status = i+1;
             signal(SIGUSR1,handler1);
             signal(SIGINT,handler1);
             pause();
         }
+        if(pid>0){
+            printf("pid hijo: %i\n",pid);
+            pids[i]=pid;
+            printf("pid hijo: %i\n",pids[i]);
+        }
+
     }
 
     // codigo de espera del padre.
     for(int i=0; i<n ; i++){
-        wait(0);
-        retornos[i] = WEXITSTATUS(status);
+        kill(pids[i],SIGUSR1);
+        retornos[i]=i+1;
         printf("valor del hijo %i: %i\n",pids[i],retornos[i]);
     }
 
