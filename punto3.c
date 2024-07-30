@@ -13,7 +13,6 @@ de forma que la variable debera terminar con el mismo valor con le que comienza 
 // creo var global
 int var = 10;
 
-
 // incio los mutex para cada hilo
 pthread_mutex_t mA = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mB = PTHREAD_MUTEX_INITIALIZER;
@@ -26,6 +25,7 @@ void *rutina_hiloA(void *arg){
     printf("A");
     var++;
     pthread_mutex_unlock(&mX);
+    pthread_exit("salida hilo A");
     return 0;
 }
 
@@ -36,6 +36,7 @@ void *rutina_hiloB(void *arg){
     var--;
     pthread_mutex_unlock(&mA);
     pthread_mutex_unlock(&mC);
+    pthread_exit("salida hilo B");
     return 0;
 
 }
@@ -47,6 +48,7 @@ void *rutina_hiloC(void *arg){
     var--;
     pthread_mutex_unlock(&mA);
     pthread_mutex_unlock(&mB);
+    pthread_exit("salida hilo C");
     return 0;
 }
 
@@ -56,19 +58,31 @@ int main(void){
     
     pthread_t hiloA, hiloB, hiloC;
 
+    printf("debug1\n");
+    printf("debug var: %i\n",var);
+
     // cierro el mutex C y X
     // mA = 1 ; mB = 1 ; mC = 0 ; mX = 0
     pthread_mutex_lock(&mC);
     pthread_mutex_lock(&mX);
+
+    printf("debug2\n");
+    printf("debug var: %i\n",var);
 
     // creacion de hilos
     pthread_create(&hiloA,NULL,rutina_hiloA,NULL);
     pthread_create(&hiloB,NULL,rutina_hiloB,NULL);
     pthread_create(&hiloC,NULL,rutina_hiloC,NULL);
 
+    printf("debug3\n");
+    printf("debug var: %i\n",var);
+
     pthread_join(hiloA,NULL);
     pthread_join(hiloB,NULL);
     pthread_join(hiloC,NULL);
+
+    printf("debug4\n");
+    printf("debug var: %i\n",var);
 
     return 0;
 }
