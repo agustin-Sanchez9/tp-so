@@ -44,7 +44,7 @@ void *rutina_hiloB(void *arg){
 void *rutina_hiloC(void *arg){
     pthread_mutex_lock(&mC);
     pthread_mutex_lock(&mX);
-    printf("C");
+    printf("C\n");
     var--;
     pthread_mutex_unlock(&mA);
     pthread_mutex_unlock(&mB);
@@ -54,34 +54,52 @@ void *rutina_hiloC(void *arg){
 
 
 
-int main(void){
-    
+int main(int argc, char *argv[]){
+
+    // mensaje de error por exceso de argumentos.
+    if(argc!=2){
+        printf("error, solo se permite 1 argumento para el proceso.");
+        exit(1);
+    }
+
+    int n = atoi(argv[1]);
+
+    // chequeo que argv[1] sea positivo.
+    if(n<0){
+        printf("el numero de procesos hermanos debe ser mayor a 0\n");
+        exit(1);
+    }
+
     pthread_t hiloA, hiloB, hiloC;
 
-    printf("debug1\n");
-    printf("debug var: %i\n",var);
 
     // cierro el mutex C y X
     // mA = 1 ; mB = 1 ; mC = 0 ; mX = 0
     pthread_mutex_lock(&mC);
     pthread_mutex_lock(&mX);
 
-    printf("debug2\n");
-    printf("debug var: %i\n",var);
 
     // creacion de hilos
-    pthread_create(&hiloA,NULL,rutina_hiloA,NULL);
-    pthread_create(&hiloB,NULL,rutina_hiloB,NULL);
-    pthread_create(&hiloC,NULL,rutina_hiloC,NULL);
+    for(int i=0 ; i < n; i++){
+        pthread_create(&hiloA,NULL,rutina_hiloA,NULL);
+        pthread_create(&hiloB,NULL,rutina_hiloB,NULL);
+        pthread_create(&hiloA,NULL,rutina_hiloA,NULL);
+        pthread_create(&hiloC,NULL,rutina_hiloC,NULL);
+    }
 
-    printf("debug3\n");
-    printf("debug var: %i\n",var);
+    // join para los hilos
+    for(int i=0 ; i < n ; i++){
+        pthread_join(hiloA,NULL);
+        pthread_join(hiloB,NULL);
+        pthread_join(hiloC,NULL);
+    }
 
-    pthread_join(hiloA,NULL);
-    pthread_join(hiloB,NULL);
-    pthread_join(hiloC,NULL);
+    // destruir mutex para liberar recursos
+    pthread_mutex_destroy(&mA);
+    pthread_mutex_destroy(&mB);
+    pthread_mutex_destroy(&mC);
+    pthread_mutex_destroy(&mX);
 
-    printf("debug4\n");
     printf("debug var: %i\n",var);
 
     return 0;
