@@ -2,91 +2,77 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/wait.h>
 #include <stdlib.h>
-#include <signal.h>
 
-// handler para la señal SIGCHLD
-void handle_sigchld(int sig) {
-    int status;
-    pid_t pid;
-    // espera final de todos los procesos hijos
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        if (WIFEXITED(status)) {
-            printf("Proceso %d terminó con estado %d\n", pid, WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)) {
-            printf("Proceso %d terminó por señal %d\n", pid, WTERMSIG(status));
-        }
-    }
+// Manejador para la señal SIGCHLD
+void sigchld_handler(int signo) {
+    // Esperar a todos los hijos que hayan terminado
+    while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
-int main(void) {
+int main(void){
+
+    // Registrar el manejador de SIGCHLD
+    signal(SIGCHLD, sigchld_handler);
+
     // variables
     pid_t pid;
     char comando[64];
     char *token;
     char *args[11]; // 10 argumentos + 1 por el NULL al final
-    int background; // 0 = no y 1 = si
+    int argsCount = 0;
+    int background = 0; // bandera para ejecución en background
 
-    // Configurar el manejador de SIGCHLD
-    struct sigaction sa;
-    sa.sa_handler = &handle_sigchld;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        perror("Error al configurar el manejador de SIGCHLD");
-        exit(EXIT_FAILURE);
-    }
+    while(1){
+        // introduccion del comando
+        printf("$>> ");
+        memset(comando,'\0',64); // seteo a comando con todo \0
+        fgets(comando, 64, stdin); // leo lo ingresado por teclado
+        comando[strcspn(comando, "\n")] = '\0'; // eliminar el salto de línea
 
-    // introduccion del comando
-    printf("$>> ");
-    while (fgets(comando, sizeof(comando), stdin) != NULL) {
-        comando[strcspn(comando, "\n")] = '\0'; // Eliminar el salto de línea al final del comando
+        // si el comando es "salir", rompe el bucle
+        if(strcmp(comando, "salir") == 0){
+            break;
+        }
 
         // parseo
-        int argsCount = 0;
-        token = strtok(comando, " ");
-        while (token != NULL && argsCount < 10) {
+        token = strtok(comando," ");
+        argsCount = 0;
+        background = 0; // Reiniciar bandera de background
+
+        while(token != NULL) {
             args[argsCount] = token;
             argsCount++;
             token = strtok(NULL, " ");
         }
-        args[argsCount] = NULL; // Terminar la lista de argumentos con NULL
 
-        // Comprobar si el último argumento es "&"
+        // Verificar si el último argumento es "&"
         if (argsCount > 0 && strcmp(args[argsCount - 1], "&") == 0) {
-            background = 1;
-            args[argsCount - 1] = NULL; // Remover el "&" de los argumentos
+            background = 1;          // Marcar para ejecución en background
+            args[argsCount - 1] = NULL; // Remover "&" de los argumentos
         } else {
-            background = 0;
-        }
-
-        if (args[0] == NULL) {
-            printf("$>> ");
-            continue; // Si no se ingresó comando, solicitar nuevamente
-        }
-
-        if (strcmp(args[0], "salir") == 0) {
-            break; // Salir del bucle si el comando es "salir"
+            args[argsCount] = NULL; // Asegurar terminación de la lista de argumentos
         }
 
         pid = fork();
         // hijo
-        if (pid == 0) {
-            execvp(args[0], args);
-            perror("comando no valido");
-            exit(EXIT_FAILURE);
+        if(pid == 0){
+            execvp(args[0],args);
+            printf("comando no valido \n");
+            exit(0);
         }
         // padre
-        else if (pid > 0) {
-            if (!background) {
-                waitpid(pid, NULL, 0); // Esperar solo si no es en background
+        else if(pid > 0){
+            if (!background) { // Si no es background, esperar al hijo
+                waitpid(pid,0,0);
             }
-            printf("$>> ");
+            // Si es background, no se llama a waitpid aquí, pero el manejador de SIGCHLD lo gestionará
         }
         // error
-        else {
-            perror("ERROR FORK");
+        else{
+            perror("ERROR FORK \n");
         }
     }
 
