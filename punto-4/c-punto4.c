@@ -12,6 +12,7 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
+    // obtencion de los semaforos creados
     int n = atoi(argv[1]);
 
     if(n<0){
@@ -25,10 +26,13 @@ int main(int argc, char *argv[]){
     char letra = 'C';
 
     for(int i=0 ; i<n ; i++){
+        // bloquea semaforos c y x
         P(semid,2);
         P(semid,3);
+        // seccion critica
         lseek(fd,0,2);
         write(fd, &letra, 1);
+        // desbloquea semaforos a y b
         V(semid,1);
         V(semid,0);
     }
