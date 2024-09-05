@@ -7,19 +7,22 @@ int main(int argc, char *argv[]) {
 
     // verificar uso correcto de los argumentos
     if (argc < 2) {
-        fprintf(stderr, "argumentos insuficientes\n");
+        printf("argumentos insuficientes\n");
         exit(0);
     }
     
+    // creo el fd a usar en el pipe
     int pipefd[2];
 
+    // creacion del pipe y chequeo de error
     if (pipe(pipefd) == -1) {
-        printf("fallo del pipe()\n");
+        printf("fallo de pipe()\n");
         exit(0);
     }
 
-    pid_t pid = fork();
 
+    pid_t pid = fork();
+    // chequeo de error de fork
     if (pid == -1) {
         printf("fallo de fork()\n");
         exit(0);
@@ -32,7 +35,7 @@ int main(int argc, char *argv[]) {
 
         // redirigir la salida estandar al extremo de escritura del pipe
         if (dup2(pipefd[1], STDOUT_FILENO) == -1) {
-            perror("dup2");
+            printf("fallo de dup2\n");
             exit(0);
         }
         
