@@ -18,24 +18,24 @@ int main() {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
-    // Crear el socket
+    // crear el socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    // Definir la dirección del servidor
+    // definir la dirección del servidor
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
-    // Enlazar el socket
+    // enlazar el socket
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
 
-    // Escuchar conexiones entrantes
+    // escucha conexiones entrantes
     if (listen(server_fd, 3) < 0) {
         perror("listen");
         exit(EXIT_FAILURE);
@@ -51,7 +51,7 @@ int main() {
 
         printf("Conexión aceptada\n");
 
-        // Crear un nuevo hilo para manejar el cliente
+        // crear un nuevo hilo para manejar el cliente
         pthread_t thread_id;
         int *client_socket = malloc(sizeof(int));
         *client_socket = new_socket;
@@ -61,7 +61,7 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        // Detach the thread to free resources when it terminates
+        // libero recursos cuando el hilo finaliza
         pthread_detach(thread_id);
     }
 
@@ -88,7 +88,7 @@ void *handle_client(void *client_socket) {
     while ((bytes_read = read(new_socket, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_read] = '\0';
 
-        clean_command(buffer);  // Limpiar el comando
+        clean_command(buffer);  // limpiar el comando
 
         if (strcmp(buffer, "salir") == 0) {
             printf("Cliente desconectado\n");
@@ -110,10 +110,10 @@ void *handle_client(void *client_socket) {
         }
 
         if (pid == 0) {
-            // Proceso hijo
-            close(pipefd[0]); // Cerrar extremo de lectura
+            // proceso hijo
+            close(pipefd[0]); // cierro el extremo de lectura
 
-            // Redirigir salida estándar al pipe
+            // redirijo hacia el pipe
             dup2(pipefd[1], STDOUT_FILENO);
             close(pipefd[1]);
 
@@ -122,8 +122,8 @@ void *handle_client(void *client_socket) {
             perror("execvp");
             exit(EXIT_FAILURE);
         } else {
-            // Proceso padre
-            close(pipefd[1]); // Cerrar extremo de escritura
+            // proceso padre
+            close(pipefd[1]); // cierro el extremo de escritura
             char result[BUFFER_SIZE];
             int read_bytes;
             while ((read_bytes = read(pipefd[0], result, sizeof(result) - 1)) > 0) {
