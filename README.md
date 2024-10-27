@@ -1,5 +1,7 @@
 # tp-so
 
+## TP 1
+
 Punto 4:
 La ejecucion se dividio en 3 programas, siendo crear-sems.c quien crea los semaforos, init-sems.c setea los valores
 para comenzar a trabajar y por ultimo init-general.c ejecuta el proceso a, el proceso b y el proceso c conjunto al parametro de iteraciones, los procesos a, b y c deben estar compilados de antemano para que funcione.
