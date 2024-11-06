@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        fprintf(stderr, "Uso: %s <fifo_escritura> <fifo_lectura>\n", argv[0]);
+        fprintf(stderr, "ERROR - FORMA DE USO: %s <fifo_escritura> <fifo_lectura>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -28,23 +28,23 @@ int main(int argc, char *argv[]) {
     // abrir el FIFO de escritura en modo lectura/escritura para evitar bloqueo
     fd_write = open(fifo_write, O_RDWR);
     if (fd_write == -1) {
-        perror("Error al abrir fifo_write");
+        perror("ERROR AL ABRIR fifo_write");
         exit(EXIT_FAILURE);
     }
 
     // abrir el FIFO de lectura en modo solo lectura
     fd_read = open(fifo_read, O_RDONLY);
     if (fd_read == -1) {
-        perror("Error al abrir fifo_read");
+        perror("ERROR AL ABRIR fifo_read");
         close(fd_write);
         exit(EXIT_FAILURE);
     }
 
-    printf("Chat iniciado. Escribe 'bye' para salir.\n");
+    printf("CHAT INICIADO. ESCRIBA 'bye' PARA SALIR\n");
 
     pid_t pid = fork();
     if (pid == -1) {
-        perror("Error al crear el proceso");
+        perror("ERROR DE fork()");
         close(fd_write);
         close(fd_read);
         exit(EXIT_FAILURE);
@@ -56,24 +56,25 @@ int main(int argc, char *argv[]) {
             memset(mensaje, 0, MAX_MSG_LEN);
             if (read(fd_read, mensaje, MAX_MSG_LEN) > 0) {
                 if (strcmp(mensaje, "bye\n") == 0) {
-                    printf("El otro usuario ha salido del chat.\n");
+                    printf("EL OTRO USUARIO A SALIDO DEL CHAT. ESCRIBA 'bye' PARA SALIR TAMBIEN\n");
                     break;
                 }
                 printf("%s", mensaje);
             }
         }
+
     } else {
         // proceso padre: encargado de enviar mensajes
         while (1) {
             fgets(mensaje, MAX_MSG_LEN, stdin);
 
             if (write(fd_write, mensaje, strlen(mensaje) + 1) == -1) {
-                perror("Error al enviar el mensaje");
+                perror("ERROR AL ENVIAR EL MENSAJE");
                 break;
             }
 
             if (strcmp(mensaje, "bye\n") == 0) {
-                printf("Saliendo del chat\n");
+                printf("SALIENDO DEL CHAT\n");
                 break;
             }
         }

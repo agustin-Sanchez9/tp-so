@@ -8,38 +8,38 @@
 #include <sys/wait.h>
 
 #define MAX_MSG_LEN 256
-#define TYPE1 1 // Tipo de mensaje para el proceso 1
-#define TYPE2 2 // Tipo de mensaje para el proceso 2
+#define TYPE1 1 // proceso 1
+#define TYPE2 2 // proceso 2
 
-// Estructura del mensaje
+// estructura del mensaje
 struct msgbuf {
-    long mtype;                 // Tipo de mensaje
-    char mtext[MAX_MSG_LEN];    // Contenido del mensaje
+    long mtype;                 // tipo de mensaje
+    char mtext[MAX_MSG_LEN];    // contenido del mensaje
 };
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "Uso: %s <tipo_proceso>\n", argv[0]);
+        fprintf(stderr, "ERROR - FORMA DE USO: %s <tipo_proceso>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     int tipo_proceso = atoi(argv[1]);
     if (tipo_proceso != 1 && tipo_proceso != 2) {
-        fprintf(stderr, "Tipo de proceso debe ser 1 o 2\n");
+        fprintf(stderr, "EL TIPO DE PROCESO SOLO PUEDE SER 1 O 2\n");
         exit(EXIT_FAILURE);
     }
 
-    // Generar una clave única para la cola de mensajes
+    // generar clave para la cola de mensajes
     key_t key = ftok("/tmp/chat_mq_key", 'A');
     if (key == -1) {
-        perror("Error al generar clave de la cola");
+        perror("ERROR AL GENERAR CLAVE DE LA COLA DE MENSAJES");
         exit(EXIT_FAILURE);
     }
 
-    // Crear la cola de mensajes
+    // crear la cola de mensajes
     int msgid = msgget(key, 0666 | IPC_CREAT);
     if (msgid == -1) {
-        perror("Error al crear cola de mensajes");
+        perror("ERROR AL CREAR COLA DE MENSAJES");
         exit(EXIT_FAILURE);
     }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 
     pid_t pid = fork();
     if (pid == -1) {
-        perror("Error al crear proceso");
+        perror("ERROR DE fork()");
         exit(EXIT_FAILURE);
     }
 
@@ -59,11 +59,11 @@ int main(int argc, char *argv[]) {
         while (1) {
             // Leer mensaje del tipo correspondiente
             if (msgrcv(msgid, &mensaje, sizeof(mensaje.mtext), tipo_lectura, 0) == -1) {
-                perror("Error al recibir mensaje");
+                perror("ERROR AL RECIBIR EL MENSAJE");
                 exit(EXIT_FAILURE);
             }
             if (strcmp(mensaje.mtext, "bye\n") == 0) {
-                printf("El otro usuario ha salido del chat.\n");
+                printf("EL OTRO USUARIO A SALIDO DEL CHAT. ESCRIBA 'bye' PARA SALIR TAMBIEN\n");
                 break;
             }
             printf("%s", mensaje.mtext);
@@ -77,11 +77,12 @@ int main(int argc, char *argv[]) {
 
             // Enviar mensaje a la cola
             if (msgsnd(msgid, &mensaje, strlen(mensaje.mtext) + 1, 0) == -1) {
-                perror("Error al enviar mensaje");
+                perror("ERROR AL ENVIAR EL MENSAJE");
                 break;
             }
 
             if (strcmp(mensaje.mtext, "bye\n") == 0) {
+                printf("SALIENDO DEL CHAT\n");
                 break;
             }
         }
