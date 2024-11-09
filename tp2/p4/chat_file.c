@@ -7,6 +7,10 @@
 #include <sys/file.h>
 #include <sys/wait.h>
 
+// utilice un archivo .txt para la comunicacion
+// simplemente me parecio la forma mas facil y rapida para llegar a la solucion
+// ademas de que tiene la pequeña ventaje que podemos abrir el archivo para ver mensajes pasados
+
 #define MAX_MSG_SIZE 256
 #define FILE_CHAT "chat.txt"
 
@@ -16,13 +20,13 @@ struct Message {
     char content[MAX_MSG_SIZE];
 };
 
-void getCurrentTime(char *buffer, size_t size) { 
+void get_current_time(char *buffer, size_t size) { 
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     strftime(buffer, size, "%H:%M:%S", t);
 }
 
-void sendMessage(int user_id, const char *content) {
+void send_msg(int user_id, const char *content) {
     FILE *file = fopen(FILE_CHAT, "a");
     if (file == NULL) {
         perror("ERROR AL ABRIR EL ARCHIVO");
@@ -32,7 +36,7 @@ void sendMessage(int user_id, const char *content) {
 
     struct Message msg;
     msg.user_id = user_id;
-    getCurrentTime(msg.timestamp, sizeof(msg.timestamp));
+    get_current_time(msg.timestamp, sizeof(msg.timestamp));
     strncpy(msg.content, content, MAX_MSG_SIZE);
 
     fprintf(file, "%d [%s]: %s\n", msg.user_id, msg.timestamp, msg.content);
@@ -40,7 +44,7 @@ void sendMessage(int user_id, const char *content) {
     fclose(file);
 }
 
-void receiveMessages(int *last_message_pos) {
+void read_msg(int *last_message_pos) {
     FILE *file = fopen(FILE_CHAT, "r");
     if (file == NULL) {
         perror("ERROR AL ABRIR EL ARCHIVO");
@@ -60,9 +64,9 @@ void receiveMessages(int *last_message_pos) {
     fclose(file);
 }
 
-void listenForMessages(int *last_message_pos) {
+void wait_msg(int *last_message_pos) {
     while (1) {
-        receiveMessages(last_message_pos);
+        read_msg(last_message_pos);
     }
 }
 
@@ -80,7 +84,7 @@ int main(int argc, char *argv[]) {
     pid_t pid = fork();
 
     if (pid == 0) {
-        listenForMessages(&last_message_pos);
+        wait_msg(&last_message_pos);
         exit(0);
     } else if (pid > 0) {
         while (1) {
@@ -92,7 +96,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
-            sendMessage(user_id, buffer);
+            send_msg(user_id, buffer);
         }
 
         kill(pid, SIGTERM);
