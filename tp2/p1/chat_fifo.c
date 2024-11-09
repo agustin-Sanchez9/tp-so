@@ -18,21 +18,21 @@ int main(int argc, char *argv[]) {
     const char *fifo_write = argv[1];
     const char *fifo_read = argv[2];
 
-    // crear los FIFOs si no existen
+    // crear los fifos si no existen
     mkfifo(fifo_write, 0666);
     mkfifo(fifo_read, 0666);
 
     char mensaje[MAX_MSG_LEN];
     int fd_write, fd_read;
 
-    // abrir el FIFO de escritura en modo lectura/escritura para evitar bloqueo
+    // abrir el fifo de escritura en modo lectura/escritura para evitar bloqueo
     fd_write = open(fifo_write, O_RDWR);
     if (fd_write == -1) {
         perror("ERROR AL ABRIR fifo_write");
         exit(EXIT_FAILURE);
     }
 
-    // abrir el FIFO de lectura en modo solo lectura
+    // abrir el fifo de lectura en modo solo lectura
     fd_read = open(fifo_read, O_RDONLY);
     if (fd_read == -1) {
         perror("ERROR AL ABRIR fifo_read");
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (pid == 0) {
-        // proceso hijo: encargado de leer mensajes
+        // proceso hijo lee mensajes
         while (1) {
             memset(mensaje, 0, MAX_MSG_LEN);
             if (read(fd_read, mensaje, MAX_MSG_LEN) > 0) {
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        // proceso padre: encargado de enviar mensajes
+        // proceso padre envia mensajes
         while (1) {
             fgets(mensaje, MAX_MSG_LEN, stdin);
 

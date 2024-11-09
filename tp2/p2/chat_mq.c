@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Variables de tipo de mensaje según el proceso
     long tipo_envio = (tipo_proceso == 1) ? TYPE1 : TYPE2;
     long tipo_lectura = (tipo_proceso == 1) ? TYPE2 : TYPE1;
 
@@ -54,10 +53,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (pid == 0) {
-        // Proceso hijo: encargado de recibir mensajes
         struct msgbuf mensaje;
         while (1) {
-            // Leer mensaje del tipo correspondiente
             if (msgrcv(msgid, &mensaje, sizeof(mensaje.mtext), tipo_lectura, 0) == -1) {
                 perror("ERROR AL RECIBIR EL MENSAJE");
                 exit(EXIT_FAILURE);
@@ -69,13 +66,11 @@ int main(int argc, char *argv[]) {
             printf("%s", mensaje.mtext);
         }
     } else {
-        // Proceso padre: encargado de enviar mensajes
         struct msgbuf mensaje;
         mensaje.mtype = tipo_envio;
         while (1) {
             fgets(mensaje.mtext, MAX_MSG_LEN, stdin);
 
-            // Enviar mensaje a la cola
             if (msgsnd(msgid, &mensaje, strlen(mensaje.mtext) + 1, 0) == -1) {
                 perror("ERROR AL ENVIAR EL MENSAJE");
                 break;
@@ -86,11 +81,10 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        // Esperar a que el proceso hijo termine
+
         wait(NULL);
     }
 
-    // Eliminar la cola de mensajes cuando el proceso de tipo 1 finaliza
     if (tipo_proceso == 1) {
         msgctl(msgid, IPC_RMID, NULL);
     }

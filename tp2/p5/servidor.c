@@ -1,11 +1,9 @@
 #include "protocolo.h"
-#include <unistd.h>
-#include <signal.h>
 
 int cola_msg;
 FILE *file;
 
-// manejador de señal SIGINT
+// manejador de señal sigint
 void manejador_signal(int signo) {
     if (file) fclose(file);
     msgctl(cola_msg, IPC_RMID, NULL);
@@ -22,7 +20,7 @@ void manejar_servidor(int cola, const char *archivo) {
     if (!file) {
         file = fopen(archivo, "w+b");
         for (int i = 0; i < MAX_REGISTROS; i++) {
-            msg_servidor.estado = 0;  // registro libre
+            msg_servidor.estado = 0;
             memset(msg_servidor.descripcion, 0, MAX_DESC);
             fwrite(&msg_servidor, sizeof(MensajeServidor), 1, file);
         }
@@ -46,15 +44,14 @@ void manejar_servidor(int cola, const char *archivo) {
                 snprintf(msg_servidor.descripcion, MAX_DESC, "Registro %d está vacío", msg_cliente.num_registro);
             }
         } else if (strcmp(msg_cliente.descripcion, "borrar") == 0) {
-            if (msg_servidor.estado == 1) { // si el registro esta ocupado
-                msg_servidor.estado = 2;    // cambia el estado a 2 (borrado)
+            if (msg_servidor.estado == 1) {
+                msg_servidor.estado = 2;
                 snprintf(msg_servidor.descripcion, MAX_DESC, "Registro %d borrado", msg_cliente.num_registro);
                 
-                // volver al registro y sobrescribirlo con el estado actualizado
+                // sobrescribir registro con el estado actualizado
                 fseek(file, msg_cliente.num_registro * sizeof(MensajeServidor), SEEK_SET);
                 fwrite(&msg_servidor, sizeof(MensajeServidor), 1, file);
             } else {
-                // si el registro ya esta vacio o borrado, responde con un mensaje de error
                 msg_servidor.estado = 0;
                 snprintf(msg_servidor.descripcion, MAX_DESC, "Registro %d ya está vacío o borrado", msg_cliente.num_registro);
             }

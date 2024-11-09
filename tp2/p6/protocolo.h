@@ -1,4 +1,3 @@
-// protocolo.h
 #ifndef PROTOCOLO_H
 #define PROTOCOLO_H
 
@@ -8,12 +7,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <stddef.h>
 
 #define COLA_MSG 0xA
 #define MAX_DESC 100
 #define MAX_REGISTROS 1000
 
-// Estructura del mensaje del cliente al servidor
+// estructura mensaje cliente
 typedef struct {
     long tipo;               
     int pid;                 
@@ -21,16 +23,16 @@ typedef struct {
     char descripcion[MAX_DESC]; 
 } MensajeCliente;
 
-// Estructura del mensaje de respuesta del servidor al cliente
+// estructura mensaje servidor
 typedef struct {
     long tipo;               
-    int estado;             // 0 para error, 1 para éxito
+    int estado;             // 0 para error, 1 para exito
     int num_registro;       
-    int pid_lock;           // PID del cliente que tiene el lock (0 si está libre)
+    int pid_lock;           // PID del cliente que tiene el lock (0 si esta libre)
     char descripcion[MAX_DESC];
 } MensajeServidor;
 
-// Prototipos de funciones
+// prototipos de funciones
 void enviar_mensaje_cliente(int cola, MensajeCliente *msg);
 void recibir_mensaje_servidor(int cola, MensajeServidor *msg, int pid);
 void manejar_cliente(int cola);

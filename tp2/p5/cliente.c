@@ -1,5 +1,4 @@
 #include "protocolo.h"
-#include <unistd.h>
 
 void enviar_mensaje_cliente(int cola, MensajeCliente *msg) {
     msgsnd(cola, msg, sizeof(MensajeCliente) - sizeof(long), 0);
